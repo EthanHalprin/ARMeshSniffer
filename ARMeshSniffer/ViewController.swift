@@ -14,6 +14,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     @IBOutlet var sceneView: ARSCNView!
     var contentNode: SCNNode?
     var framesCount = 0
+    let viewModel = ViewModel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,7 +36,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-        
+                
         #endif
     }
     
@@ -47,6 +48,28 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
         // Run the view's session
         sceneView.session.run(configuration)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        /*
+         
+         Successful tested for saving as pdf in Files App:
+         
+           let s = "abcdefghijklmnop0987654321"
+           let data = Data(s.utf8)
+           viewModel.savePDF(data, presenter: self)
+         
+         
+         Successful tested for saving as in documentDirectory:
+        
+            viewModel.write("-0.977797989, 0.2345676576, -0.763889879")
+            if let str = viewModel.read() {
+                print("From file:  \(str)")
+            }
+         
+         */
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -83,6 +106,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         print("Pixel Buff\n")
         let cvPixelBuffer = self.sceneView.session.currentFrame!.capturedImage
         dump(cvPixelBuffer)
+        //self.sceneView.session.currentFrame!.camera.intrinsics.transpose
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
