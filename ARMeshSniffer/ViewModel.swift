@@ -4,14 +4,12 @@
 //
 //  Created by Ethan on 09/12/2020.
 //
-
 import Foundation
 import UIKit
 
 class ViewModel {
     
     var filename = "armesh_results.bin"
-    let fileURL = URL(fileURLWithPath: "armesh_results.bin")
     let documentInteractionController = UIDocumentInteractionController()
     
     /// Saves data as pdf in the Files app system on the device
@@ -27,14 +25,12 @@ class ViewModel {
     ///   You have to present a UIActivityViewController that shows options on
     ///   what they can do with that document.
     func savePDF(_ documentData: Data, presenter vc: UIViewController) {
-        let activityController = UIActivityViewController(activityItems: [documentData], applicationActivities: nil)
+        let activityController = UIActivityViewController(activityItems: [documentData],
+                                                          applicationActivities: nil)
         vc.present(activityController, animated: true, completion: nil)
     }
     
-    let url = URL(fileURLWithPath: "myTestFile.bin")
-
     func write(_ wArray: inout [Float]) {
-        // Writing
         let wData = Data(bytes: &wArray, count: wArray.count * MemoryLayout<Float>.stride)
         
         if let dir = FileManager.default.urls(for: .documentDirectory,
@@ -48,14 +44,11 @@ class ViewModel {
             }
         }
     }
- 
-
     func read() -> [Float]? {
-        
+    
         var rData: Data?
         
-        if let dir = FileManager.default.urls(for: .documentDirectory,
-                                              in: .userDomainMask).first {
+        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
             let fileURL = dir.appendingPathComponent(self.filename)
             do {
                 rData = try Data(contentsOf: fileURL)
@@ -64,17 +57,26 @@ class ViewModel {
                 print("ERROR: Could not read from binary file")
             }
         }
+        var rArray: [Float]?
+        if let rData = rData {
 
-        if let data = rData {
-            var rArray: [Float]?
+            let tPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: rData.count)
+            rData.copyBytes(to: tPointer, count: rData.count)
 
-            data.withUnsafeBytes { (bytes: UnsafePointer<Float>) in
-                rArray = Array(UnsafeBufferPointer(start: bytes, count: data.count / MemoryLayout<Float>.size))
+            defer {
+                tPointer.deinitialize(count: rData.count)
+                tPointer.deallocate()
             }
 
-            return rArray!
-        } else {
-            return nil
+            let pointer = UnsafeRawPointer(tPointer) // Performs no allocation or copying; no deallocation shall be done.
+            rArray = [Float]()
+            var offset = 00
+            let count = 3
+            for _ in 0..<count {
+                rArray!.append(pointer.load(fromByteOffset: offset, as: Float.self))
+                offset += MemoryLayout<Float>.size
+            }
         }
+        return rArray
     }
 }

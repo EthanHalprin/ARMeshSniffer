@@ -54,21 +54,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         super.viewDidAppear(animated)
         
         /*
-         
          Successful tested for saving as pdf in Files App:
          
            let s = "abcdefghijklmnop0987654321"
            let data = Data(s.utf8)
            viewModel.savePDF(data, presenter: self)
-         [
-         
-         Successful tested for saving as in documentDirectory:
-        
-            viewModel.write("-0.977797989, 0.2345676576, -0.763889879")
-            if let str = viewModel.read() {
-                print("From file:  \(str)")
-            }
-         
          */
         
         let vector3 = SIMD3<Float>(0.00028477787, -0.029921511, 0.061650444)
