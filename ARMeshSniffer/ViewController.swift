@@ -70,6 +70,10 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             }
          
          */
+        
+        var vector3 = SIMD3<Float>(0.00028477787, -0.029921511, 0.061650444)
+        viewModel.write()
+        viewModel.read()
     }
     
     override func viewWillDisappear(_ animated: Bool) {

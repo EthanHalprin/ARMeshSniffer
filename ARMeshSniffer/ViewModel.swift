@@ -10,7 +10,8 @@ import UIKit
 
 class ViewModel {
     
-    var filename = "armesh_results"
+    var filename = "armesh_results.bin"
+    let fileURL = URL(fileURLWithPath: "armesh_results.bin")
     let documentInteractionController = UIDocumentInteractionController()
     
     /// Saves data as pdf in the Files app system on the device
@@ -30,32 +31,49 @@ class ViewModel {
         vc.present(activityController, animated: true, completion: nil)
     }
     
-    func write(_ text: String) {
+    let url = URL(fileURLWithPath: "myTestFile.bin")
+
+    func write() {
+        // Writing
+        var wArray: [Float] = [1.1, 3.7, 2.5, 6.4, 7.8]
+        let wData = Data(bytes: &wArray, count: wArray.count * MemoryLayout<Float>.stride)
+        
         if let dir = FileManager.default.urls(for: .documentDirectory,
                                               in: .userDomainMask).first {
-            let fileURL = dir.appendingPathComponent(self.filename)
+            let url = dir.appendingPathComponent(self.filename)
             do {
-                try text.write(to: fileURL, atomically: false, encoding: .utf8)
+                try wData.write(to: url)
             }
             catch {
-                print("ERROR: Could not write to file")
+                print("ERROR: Could not write to binary file")
             }
         }
     }
-    
-    func read() -> String? {
-        var text: String?
+ 
 
+    func read() {
+        
+        var rData: Data?
+        
         if let dir = FileManager.default.urls(for: .documentDirectory,
                                               in: .userDomainMask).first {
             let fileURL = dir.appendingPathComponent(self.filename)
             do {
-                text = try String(contentsOf: fileURL, encoding: .utf8)
+                rData = try Data(contentsOf: fileURL)
             }
             catch {
-                print("ERROR: Could not read file")
+                print("ERROR: Could not read from binary file")
             }
         }
-        return text
+
+        if let data = rData {
+            var rArray: [Float]?
+
+            data.withUnsafeBytes { (bytes: UnsafePointer<Float>) in
+                rArray = Array(UnsafeBufferPointer(start: bytes, count: data.count / MemoryLayout<Float>.size))
+            }
+
+            print(rArray!)
+        }
     }
 }
