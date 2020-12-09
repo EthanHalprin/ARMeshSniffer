@@ -1,2 +1,2 @@
 # ARMeshSniffer
-Capture data from AR frames on Face mesh vertices and persist it
+ARKit project for capturing face mesh vertices from AR frames on and persist them
