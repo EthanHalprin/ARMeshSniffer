@@ -33,9 +33,8 @@ class ViewModel {
     
     let url = URL(fileURLWithPath: "myTestFile.bin")
 
-    func write() {
+    func write(_ wArray: inout [Float]) {
         // Writing
-        var wArray: [Float] = [1.1, 3.7, 2.5, 6.4, 7.8]
         let wData = Data(bytes: &wArray, count: wArray.count * MemoryLayout<Float>.stride)
         
         if let dir = FileManager.default.urls(for: .documentDirectory,
@@ -51,7 +50,7 @@ class ViewModel {
     }
  
 
-    func read() {
+    func read() -> [Float]? {
         
         var rData: Data?
         
@@ -73,7 +72,9 @@ class ViewModel {
                 rArray = Array(UnsafeBufferPointer(start: bytes, count: data.count / MemoryLayout<Float>.size))
             }
 
-            print(rArray!)
+            return rArray!
+        } else {
+            return nil
         }
     }
 }

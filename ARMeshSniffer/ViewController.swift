@@ -60,7 +60,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
            let s = "abcdefghijklmnop0987654321"
            let data = Data(s.utf8)
            viewModel.savePDF(data, presenter: self)
-         
+         [
          
          Successful tested for saving as in documentDirectory:
         
@@ -71,9 +71,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
          
          */
         
-        var vector3 = SIMD3<Float>(0.00028477787, -0.029921511, 0.061650444)
-        viewModel.write()
-        viewModel.read()
+        let vector3 = SIMD3<Float>(0.00028477787, -0.029921511, 0.061650444)
+        var arr3 = [Float]()
+        arr3.append(vector3[0])
+        arr3.append(vector3[1])
+        arr3.append(vector3[2])
+        viewModel.write(&arr3)
+        if let vec3 = viewModel.read() {
+            print("vec3 = \(vec3)")
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
