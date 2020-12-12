@@ -91,7 +91,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                                                imageHeight: Float(currentFrame.camera.imageResolution.height),
                                                exposureDuration: Double(currentFrame.camera.exposureDuration))
             
-            self.viewModel.write(sniffedBlock)
+            self.viewModel.writeToFile(sniffedBlock)
         }
     }
     

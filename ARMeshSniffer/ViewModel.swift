@@ -41,7 +41,7 @@ class ViewModel {
         vc.present(activityController, animated: true, completion: nil)
     }
     
-    func write(_ block: SniffBlock) {
+    func writeToFile(_ block: SniffBlock) {
         
         guard let fileURL = self.url else {
             return
@@ -62,7 +62,7 @@ class ViewModel {
         }
     }
     
-    func read() -> SniffBlock? {
+    func readFromFile() -> SniffBlock? {
     
         var data: Data?
         var sniffedBlock: SniffBlock?
@@ -92,20 +92,25 @@ class ViewModel {
     func displaySavedFileContent() {
         
         for i in 0..<framesCount {
-            if let sniffedBlock = read() {
+            
+            if let sniffedBlock = readFromFile() {
                 
                 guard let vertices = sniffedBlock.vertices else { break }
                 
-                print("\n\n======== BLOCK #\(i)  ====================================================")
+                print("\n\n======== FRAME #\(i)  ====================================================")
 
-                print("\n\n \(vertices.count) VERTICES          \n\n ")
-                print("\(String(describing: sniffedBlock.vertices))")
+                print("\n\n \(vertices.count) VERTICES :         \n\n ")
+                print("\(String(describing: vertices))")
 
-                print("\n\n IMAGE          \n\n ")
-                print("\(String(describing: sniffedBlock.image))")
+                if let img = sniffedBlock.image {
+                    print("\n\n IMAGE          \n\n ")
+                    print("\(String(describing: img))")
+                }
 
-                print("\n\n CAM         \n\n ")
-                print("\(String(describing: sniffedBlock.camInfo))\n\n")
+                if let cam = sniffedBlock.camInfo {
+                    print("\n\n CAM         \n\n ")
+                    print("\(String(describing: cam))\n\n")
+                }
             }
         }
     }
