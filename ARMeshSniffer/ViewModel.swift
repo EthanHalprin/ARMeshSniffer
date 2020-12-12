@@ -6,13 +6,17 @@
 //
 import Foundation
 import UIKit
+import ARKit
 
 class ViewModel {
     
     var filename = "armesh_results.bin"
     var url: URL?
     let documentInteractionController = UIDocumentInteractionController()
-    
+    var contentNode: SCNNode?
+    var framesCount = 0
+    let serialQueue = DispatchQueue(label: "ARMeshSniffer.serial.queue")
+
     
     /// Saves data as pdf in the Files app system on the device
     ///
@@ -92,54 +96,22 @@ class ViewModel {
         
         return sniffedBlock
     }
-    
-    func write(_ wArray: inout [Float]) {
-        let wData = Data(bytes: &wArray, count: wArray.count * MemoryLayout<Float>.stride)
-        
-        if let dir = FileManager.default.urls(for: .documentDirectory,
-                                              in: .userDomainMask).first {
-            let url = dir.appendingPathComponent(self.filename)
-            do {
-                try wData.write(to: url)
-            }
-            catch {
-                print("ERROR: Could not write to binary file")
+   
+    func displayRecording() {
+        for i in 0..<framesCount {
+            if let sniffedBlock = read() {
+                print("\n\n======== BLOCK #\(i)  ====================================================")
+
+                print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
+                print("\(sniffedBlock.vertices)")
+
+                print("\n\n IMAGE          \n\n ")
+                print("\(sniffedBlock.image)")
+
+                print("\n\n CAM         \n\n ")
+                print("\(sniffedBlock.camInfo)\n\n")
             }
         }
     }
-    func readBin() -> [Float]? {
-    
-        var rData: Data?
-        
-        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let fileURL = dir.appendingPathComponent(self.filename)
-            do {
-                rData = try Data(contentsOf: fileURL)
-            }
-            catch {
-                print("ERROR: Could not read from binary file")
-            }
-        }
-        var rArray: [Float]?
-        if let rData = rData {
 
-            let tPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: rData.count)
-            rData.copyBytes(to: tPointer, count: rData.count)
-
-            defer {
-                tPointer.deinitialize(count: rData.count)
-                tPointer.deallocate()
-            }
-
-            let pointer = UnsafeRawPointer(tPointer) // Performs no allocation or copying; no deallocation shall be done.
-            rArray = [Float]()
-            var offset = 00
-            let count = 3
-            for _ in 0..<count {
-                rArray!.append(pointer.load(fromByteOffset: offset, as: Float.self))
-                offset += MemoryLayout<Float>.size
-            }
-        }
-        return rArray
-    }
-}
+ }

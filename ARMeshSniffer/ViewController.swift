@@ -12,33 +12,13 @@ import ARKit
 class ViewController: UIViewController, ARSCNViewDelegate {
 
     @IBOutlet var sceneView: ARSCNView!
-    var contentNode: SCNNode?
-    var framesCount = 0
     let viewModel = ViewModel()
-    let serialQueue = DispatchQueue(label: "ARMeshSniffer.serial.queue")
+
+    // MARK: - ViewController Life-Cycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Verify a real device
-        #if targetEnvironment(simulator)
-        
-        #error("ARKit is not supported in iOS Simulator. Connect a physical iOS device or select Generic iOS Device as a build-only destination.")
-        
-        #else
-
-        // Verify true depth cam
-        guard ARFaceTrackingConfiguration.isSupported else {
-            fatalError("ERROR: Device is not supporting TrueDepth camera (iPhone X and above required)")
-        }
-
-        // Set the view's delegate
-        sceneView.delegate = self
-        
-        // Show statistics such as fps and timing information
-        sceneView.showsStatistics = true
-                        
-        #endif
+        ARInit()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -49,62 +29,6 @@ class ViewController: UIViewController, ARSCNViewDelegate {
 
         // Run the view's session
          sceneView.session.run(configuration)
-
-        
-//        if let pixelBuffer = self.makePixelBuffer() {
-//            var vertices = [SIMD3<Float>]()
-//            vertices.append(SIMD3<Float>(-0.1234, 0.5678, 0.999901))
-//            vertices.append(SIMD3<Float>(0.5555, -0.7777, 0.888888))
-//            vertices.append(SIMD3<Float>(0.6666,  0.5678, 0.111111))
-//
-//            let rawImage = RawImage(pixelBuffer)
-//
-//            let camInfo = CameraInfo(imageWidth: 720.0, imageHeight: 1280.0, exposureDuration: 3.0)
-//
-//            let sniffedBlock = SniffBlock(vertices: vertices, image: rawImage, camInfo: camInfo)
-//
-//            self.viewModel.write(sniffedBlock)
-//
-//            if let readBlock = self.viewModel.read() {
-//                dump(readBlock)
-//            }
-//        }
-
-        
-        
-        
-//        viewModel.write(&arr3)
-//        if let vec3 = viewModel.read() {
-//            print("vec3 = \(vec3)")
-//        }
-//
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        
-        /*
-         Successful tested for saving as pdf in Files App:
-         
-           let s = "abcdefghijklmnop0987654321"
-           let data = Data(s.utf8)
-           viewModel.savePDF(data, presenter: self)
-         */
-        
-
-        /*
-         Successful tested for saving as binary:
- 
-            let vector3 = SIMD3<Float>(0.00028477787, -0.029921511, 0.061650444)
-            var arr3 = [Float]()
-            arr3.append(vector3[0])
-            arr3.append(vector3[1])
-            arr3.append(vector3[2])
-            viewModel.write(&arr3)
-            if let vec3 = viewModel.read() {
-                print("vec3 = \(vec3)")
-        }
-         */
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -124,43 +48,28 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Render the face Mesh
         let faceGeometry = ARSCNFaceGeometry(device: sceneView.device!)!
-        contentNode = SCNNode(geometry: faceGeometry)
-        contentNode!.geometry?.firstMaterial?.fillMode = .lines
-        
-        // The Metal buffer that holds the vertex data.
-        //id<MTLBuffer> _vertices;
-        
-    //    var vertexes = [MTLBuffer]()
-
-        // The number of vertices in the vertex buffer.
-        //NSUInteger _numVertices;
-
- //       let numVertices = 1000
+        viewModel.contentNode = SCNNode(geometry: faceGeometry)
+        viewModel.contentNode!.geometry?.firstMaterial?.fillMode = .lines
                 
-//        var vertexes = sceneView.device!.makeBuffer(length: numVertices, options: MTLResourceOptions.storageModeShared)
-        
-        return contentNode
+        return viewModel.contentNode
     }
-    let queue = OperationQueue()
 
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         
         guard anchor is ARFaceAnchor,
-              let currentFrame = self.sceneView.session.currentFrame else {
-            queue.cancelAllOperations()
+              let currentFrame = sceneView.session.currentFrame else {
             return
         }
         
-        guard framesCount < 100 else  {
+        guard self.viewModel.framesCount < 30 else  {
             sceneView.session.pause()
-            queue.waitUntilAllOperationsAreFinished()
-            displayRecording(framesCount)
+            viewModel.displayRecording()
             return
         }
         
-        print("–––––––––––––––––––––– Frame No. \(framesCount) ––––––––––––––––––––––")
+        print("–––––––––––––––––––––– Frame No. \(viewModel.framesCount) ––––––––––––––––––––––")
         
-        framesCount += 1
+        viewModel.framesCount += 1
         
         let vertices     = (anchor as! ARFaceAnchor).geometry.vertices
         let camInfo      = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
@@ -168,25 +77,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                                       exposureDuration: Double(currentFrame.camera.exposureDuration))
         let image        = RawImage(currentFrame.capturedImage)
         let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
-        queue.addOperation {
+        viewModel.serialQueue.async {
             self.viewModel.write(sniffedBlock)
-        }
-    }
-    
-    func displayRecording(_ count: Int) {
-        for i in 0..<count {
-            if let sniffedBlock = self.viewModel.read() {
-                print("\n\n======== BLOCK #\(i)  ====================================================")
-
-                print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
-                print("\(sniffedBlock.vertices)")
-
-                print("\n\n IMAGE          \n\n ")
-                print("\(sniffedBlock.image)")
-
-                print("\n\n CAM         \n\n ")
-                print("\(sniffedBlock.camInfo)\n\n")
-            }
         }
     }
     
@@ -201,47 +93,30 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func sessionInterruptionEnded(_ session: ARSession) {
         // Reset tracking and/or remove existing anchors if consistent tracking is required
     }
-    private enum Constants {
-          static let fps: Int32 = 30
-          static let frameDelay = 1.0 / Double(fps)
-          static let frameWidth = 960
-          static let frameHeight = 540
-          static let bitsInByte = 8
-    }
-    private var framesAlreadyWritten: Int64 = 0
+}
 
-    private func makePixelBuffer() -> CVPixelBuffer? {
-        let attrs = [kCVPixelBufferMetalCompatibilityKey: kCFBooleanTrue] as CFDictionary
-        var pixelBufferUnwrapped: CVPixelBuffer?
-        let status = CVPixelBufferCreate(kCFAllocatorDefault, Int(Constants.frameWidth), Int(Constants.frameWidth), kCVPixelFormatType_32BGRA, attrs, &pixelBufferUnwrapped)
-        guard status == kCVReturnSuccess, let pixelBuffer = pixelBufferUnwrapped else {
-            return nil
+extension ViewController {
+    
+    func ARInit() {
+    
+        // Verify a real device
+        #if targetEnvironment(simulator)
+        
+        #error("ARKit is not supported in iOS Simulator. Connect a physical iOS device or select Generic iOS Device as a build-only destination.")
+        
+        #else
+
+        // Verify true depth cam
+        guard ARFaceTrackingConfiguration.isSupported else {
+            fatalError("ERROR: Device is not supporting TrueDepth camera (iPhone X and above required)")
         }
 
-        CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-        let pixelData = CVPixelBufferGetBaseAddress(pixelBuffer)
-
-        let rgbColorSpace = CGColorSpaceCreateDeviceRGB()
-        guard let context = CGContext(
-            data: pixelData,
-            width: Constants.frameWidth,
-            height: Constants.frameHeight,
-            bitsPerComponent: Constants.bitsInByte,
-            bytesPerRow: CVPixelBufferGetBytesPerRow(pixelBuffer),
-            space: rgbColorSpace,
-            bitmapInfo: CGImageAlphaInfo.noneSkipFirst.rawValue
-        ) else {
-                return nil
-        }
-
-        UIGraphicsPushContext(context)
-        let value = CGFloat(sin(Float(framesAlreadyWritten) / (Float(Constants.fps) / Float.pi)) / 2.0 + 0.5)
-        let color = UIColor(red: value, green: value, blue: value, alpha: value)
-        context.setFillColor(color.cgColor)
-        context.fill(CGRect(x: 0, y: 0, width: Constants.frameWidth, height: Constants.frameHeight))
-        UIGraphicsPopContext()
-        CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags(rawValue: 0))
-
-        return pixelBuffer
+        // Set the view's delegate
+        sceneView.delegate = self
+        
+        // Show statistics such as fps and timing information
+        sceneView.showsStatistics = true
+                        
+        #endif
     }
 }
