@@ -44,7 +44,15 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     @IBAction func stopTouchInside(_ sender: UIButton) {
         sceneView.session.pause()
         viewModel.operationQueue.waitUntilAllOperationsAreFinished()
-        viewModel.displayRecording()
+                
+        let alert = UIAlertController(title: "Finished",
+                                      message: "Session recording has finished. To see what was recorded, press close and watch Xcode's Debug Output Console",
+                                      preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "CLOSE", style: .default, handler: { _ in
+            self.viewModel.displaySavedFileContent()
+        }))
+        
+        self.present(alert, animated: true)
     }
     
 

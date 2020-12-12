@@ -67,14 +67,15 @@ class ViewModel {
         var data: Data?
         var sniffedBlock: SniffBlock?
         
-        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let fileURL = dir.appendingPathComponent(self.filename)
-            do {
-                data = try Data(contentsOf: fileURL)
-            }
-            catch {
-                print("ERROR: Could not encode SniffBlock to data")
-            }
+        guard let fileURL = self.url else {
+            return nil
+        }
+
+        do {
+            data = try Data(contentsOf: fileURL)
+        }
+        catch {
+            print("ERROR: Could not encode SniffBlock to data")
         }
         
         if let data = data {
@@ -88,7 +89,7 @@ class ViewModel {
         return sniffedBlock
     }
    
-    func displayRecording() {
+    func displaySavedFileContent() {
         
         for i in 0..<framesCount {
             if let sniffedBlock = read() {
