@@ -9,13 +9,13 @@ import Foundation
 import UIKit
 
 
-struct SniffBlock: Codable {
-    var vertices: [SIMD3<Float>]
-    var image: RawImage
-    var camInfo: CameraInfo
+class SniffBlock: Codable {
+    var vertices: [SIMD3<Float>]?
+    var image: RawImage?
+    var camInfo: CameraInfo?
 }
 
-struct RawImage: Codable {
+class RawImage: Codable {
 
     var jpegData: Data
 

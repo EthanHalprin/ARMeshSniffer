@@ -89,18 +89,22 @@ class ViewModel {
     }
    
     func displayRecording() {
+        
         for i in 0..<framesCount {
             if let sniffedBlock = read() {
+                
+                guard let vertices = sniffedBlock.vertices else { break }
+                
                 print("\n\n======== BLOCK #\(i)  ====================================================")
 
-                print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
-                print("\(sniffedBlock.vertices)")
+                print("\n\n \(vertices.count) VERTICES          \n\n ")
+                print("\(String(describing: sniffedBlock.vertices))")
 
                 print("\n\n IMAGE          \n\n ")
-                print("\(sniffedBlock.image)")
+                print("\(String(describing: sniffedBlock.image))")
 
                 print("\n\n CAM         \n\n ")
-                print("\(sniffedBlock.camInfo)\n\n")
+                print("\(String(describing: sniffedBlock.camInfo))\n\n")
             }
         }
     }

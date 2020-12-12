@@ -66,11 +66,16 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         viewModel.operationQueue.addOperation {
             print("–––––––––––––––––––––– Frame No. \(self.viewModel.framesCount) ––––––––––––––––––––––")
             self.viewModel.framesCount += 1
-            self.viewModel.write(SniffBlock(vertices: (anchor as! ARFaceAnchor).geometry.vertices,
-                                             image  : RawImage(currentFrame.capturedImage),
-                                             camInfo: CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
-                                                                 imageHeight: Float(currentFrame.camera.imageResolution.height),
-                                                                 exposureDuration: Double(currentFrame.camera.exposureDuration))))
+            
+            let sniffedBlock = SniffBlock()
+            
+            sniffedBlock.vertices = (anchor as! ARFaceAnchor).geometry.vertices
+            sniffedBlock.image    = RawImage(currentFrame.capturedImage)
+            sniffedBlock.camInfo  = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
+                                               imageHeight: Float(currentFrame.camera.imageResolution.height),
+                                               exposureDuration: Double(currentFrame.camera.exposureDuration))
+            
+            self.viewModel.write(sniffedBlock)
         }
     }
     
