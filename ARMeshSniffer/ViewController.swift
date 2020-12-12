@@ -28,7 +28,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let configuration = ARFaceTrackingConfiguration()
 
         // Run the view's session
-         sceneView.session.run(configuration)
+        sceneView.session.run(configuration)
+        
+        viewModel.operationQueue.maxConcurrentOperationCount = 10
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -53,7 +55,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                 
         return viewModel.contentNode
     }
-
+    
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         
         guard anchor is ARFaceAnchor,
@@ -61,23 +63,19 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             return
         }
         
-        guard self.viewModel.framesCount < 30 else  {
-            sceneView.session.pause()
-            viewModel.displayRecording()
-            return
-        }
+        viewModel.operationQueue.addOperation {
+
+            print("–––––––––––––––––––––– Frame No. \(self.viewModel.framesCount) ––––––––––––––––––––––")
+            
+            self.viewModel.framesCount += 1
+            
+            let vertices     = (anchor as! ARFaceAnchor).geometry.vertices
+            let camInfo      = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
+                                          imageHeight: Float(currentFrame.camera.imageResolution.height),
+                                          exposureDuration: Double(currentFrame.camera.exposureDuration))
+            let image        = RawImage(currentFrame.capturedImage)
+            let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
         
-        print("–––––––––––––––––––––– Frame No. \(viewModel.framesCount) ––––––––––––––––––––––")
-        
-        viewModel.framesCount += 1
-        
-        let vertices     = (anchor as! ARFaceAnchor).geometry.vertices
-        let camInfo      = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
-                                      imageHeight: Float(currentFrame.camera.imageResolution.height),
-                                      exposureDuration: Double(currentFrame.camera.exposureDuration))
-        let image        = RawImage(currentFrame.capturedImage)
-        let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
-        viewModel.serialQueue.async {
             self.viewModel.write(sniffedBlock)
         }
     }

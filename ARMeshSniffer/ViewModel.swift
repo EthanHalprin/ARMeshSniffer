@@ -12,10 +12,10 @@ class ViewModel {
     
     var filename = "armesh_results.bin"
     var url: URL?
-    let documentInteractionController = UIDocumentInteractionController()
     var contentNode: SCNNode?
     var framesCount = 0
-    let serialQueue = DispatchQueue(label: "ARMeshSniffer.serial.queue")
+    var operationQueue = OperationQueue()
+
     
     init() {
         if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
@@ -23,7 +23,6 @@ class ViewModel {
         }
     }
 
-    
     /// Saves data as pdf in the Files app system on the device
     ///
     /// - Parameters:
