@@ -47,29 +47,31 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         let configuration = ARFaceTrackingConfiguration()
 
         // Run the view's session
-        // sceneView.session.run(configuration)
+         sceneView.session.run(configuration)
 
         
-        if let pixelBuffer = self.makePixelBuffer() {
-            var vertices = [SIMD3<Float>]()
-            vertices.append(SIMD3<Float>(-0.1234, 0.5678, 0.999901))
-            vertices.append(SIMD3<Float>(0.5555, -0.7777, 0.888888))
-            vertices.append(SIMD3<Float>(0.6666,  0.5678, 0.111111))
-
-            let rawImage = RawImage(pixelBuffer)
-
-            let camInfo = CameraInfo(imageWidth: 720.0, imageHeight: 1280.0, exposureDuration: 3.0)
-
-            let sniffedBlock = SniffBlock(vertices: vertices, image: rawImage, camInfo: camInfo)
-            
-            self.viewModel.write(sniffedBlock)
-            
-            if let readBlock = self.viewModel.read() {
-                dump(readBlock)
-            }
-        }
+//        if let pixelBuffer = self.makePixelBuffer() {
+//            var vertices = [SIMD3<Float>]()
+//            vertices.append(SIMD3<Float>(-0.1234, 0.5678, 0.999901))
+//            vertices.append(SIMD3<Float>(0.5555, -0.7777, 0.888888))
+//            vertices.append(SIMD3<Float>(0.6666,  0.5678, 0.111111))
 //
+//            let rawImage = RawImage(pixelBuffer)
 //
+//            let camInfo = CameraInfo(imageWidth: 720.0, imageHeight: 1280.0, exposureDuration: 3.0)
+//
+//            let sniffedBlock = SniffBlock(vertices: vertices, image: rawImage, camInfo: camInfo)
+//
+//            self.viewModel.write(sniffedBlock)
+//
+//            if let readBlock = self.viewModel.read() {
+//                dump(readBlock)
+//            }
+//        }
+
+        
+        
+        
 //        viewModel.write(&arr3)
 //        if let vec3 = viewModel.read() {
 //            print("vec3 = \(vec3)")
@@ -126,30 +128,45 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         return contentNode
     }
-    
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         
-        guard anchor is ARFaceAnchor else { return }
+        guard anchor is ARFaceAnchor, let currentFrame = self.sceneView.session.currentFrame else {
+            return
+        }
         
         print("–––––––––––––––––––––– Frame No. \(framesCount) ––––––––––––––––––––––")
         
         framesCount += 1
-        let vertices = (anchor as! ARFaceAnchor).geometry.vertices
-        print("Vertices NUM: \(vertices.count)")
-
-        dump(vertices[0])
-        dump(vertices[10])
-        dump(vertices[100])
-        print("Pixel Buff\n")
-        let cvPixelBuffer = self.sceneView.session.currentFrame!.capturedImage
-        #if DEBUG
-        dump(cvPixelBuffer)
-        #endif
         
-        // ARCamera params
-        let imageWidth  = self.sceneView.session.currentFrame!.camera.imageResolution.width
-        let imageHeight = self.sceneView.session.currentFrame!.camera.imageResolution.height
-        let exposureDuration = self.sceneView.session.currentFrame!.camera.exposureDuration
+        if framesCount < 10 {
+            
+            let vertices = (anchor as! ARFaceAnchor).geometry.vertices
+            
+            let camInfo  = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
+                                      imageHeight: Float(currentFrame.camera.imageResolution.height),
+                                      exposureDuration: Double(currentFrame.camera.exposureDuration))
+            
+            let image    = RawImage(currentFrame.capturedImage)
+            
+            let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
+            
+            self.viewModel.write(sniffedBlock)
+        } else if framesCount == 10 {
+            for i in 0..<10 {
+                if let sniffedBlock = self.viewModel.read() {
+                    print("======== BLOCK #\(i)  =============================================================")
+
+                    print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
+                    print("\(sniffedBlock.vertices)")
+
+                    print("\n\n IMAGE          \n\n ")
+                    print("\(sniffedBlock.image)")
+
+                    print("\n\n CAM         \n\n ")
+                    print("\(sniffedBlock.camInfo)\n\n")
+                }
+            }
+        }
     }
     
     func session(_ session: ARSession, didFailWithError error: Error) {
