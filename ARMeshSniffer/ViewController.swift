@@ -30,7 +30,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Run the view's session
         sceneView.session.run(configuration)
         
-        viewModel.operationQueue.maxConcurrentOperationCount = 10
+        viewModel.operationQueue.maxConcurrentOperationCount = 1
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -64,19 +64,13 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         }
         
         viewModel.operationQueue.addOperation {
-
             print("–––––––––––––––––––––– Frame No. \(self.viewModel.framesCount) ––––––––––––––––––––––")
-            
             self.viewModel.framesCount += 1
-            
-            let vertices     = (anchor as! ARFaceAnchor).geometry.vertices
-            let camInfo      = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
-                                          imageHeight: Float(currentFrame.camera.imageResolution.height),
-                                          exposureDuration: Double(currentFrame.camera.exposureDuration))
-            let image        = RawImage(currentFrame.capturedImage)
-            let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
-        
-            self.viewModel.write(sniffedBlock)
+            self.viewModel.write(SniffBlock(vertices: (anchor as! ARFaceAnchor).geometry.vertices,
+                                             image  : RawImage(currentFrame.capturedImage),
+                                             camInfo: CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
+                                                                 imageHeight: Float(currentFrame.camera.imageResolution.height),
+                                                                 exposureDuration: Double(currentFrame.camera.exposureDuration))))
         }
     }
     
