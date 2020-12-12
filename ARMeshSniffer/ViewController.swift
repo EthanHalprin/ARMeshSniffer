@@ -15,6 +15,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     var contentNode: SCNNode?
     var framesCount = 0
     let viewModel = ViewModel()
+    let serialQueue = DispatchQueue(label: "ARMeshSniffer.serial.queue")
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -36,7 +37,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         // Show statistics such as fps and timing information
         sceneView.showsStatistics = true
-                
+                        
         #endif
     }
     
@@ -126,11 +127,34 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         contentNode = SCNNode(geometry: faceGeometry)
         contentNode!.geometry?.firstMaterial?.fillMode = .lines
         
+        // The Metal buffer that holds the vertex data.
+        //id<MTLBuffer> _vertices;
+        
+    //    var vertexes = [MTLBuffer]()
+
+        // The number of vertices in the vertex buffer.
+        //NSUInteger _numVertices;
+
+ //       let numVertices = 1000
+                
+//        var vertexes = sceneView.device!.makeBuffer(length: numVertices, options: MTLResourceOptions.storageModeShared)
+        
         return contentNode
     }
+    let queue = OperationQueue()
+
     func renderer(_ renderer: SCNSceneRenderer, didUpdate node: SCNNode, for anchor: ARAnchor) {
         
-        guard anchor is ARFaceAnchor, let currentFrame = self.sceneView.session.currentFrame else {
+        guard anchor is ARFaceAnchor,
+              let currentFrame = self.sceneView.session.currentFrame else {
+            queue.cancelAllOperations()
+            return
+        }
+        
+        guard framesCount < 100 else  {
+            sceneView.session.pause()
+            queue.waitUntilAllOperationsAreFinished()
+            displayRecording(framesCount)
             return
         }
         
@@ -138,33 +162,30 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         
         framesCount += 1
         
-        if framesCount < 10 {
-            
-            let vertices = (anchor as! ARFaceAnchor).geometry.vertices
-            
-            let camInfo  = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
+        let vertices     = (anchor as! ARFaceAnchor).geometry.vertices
+        let camInfo      = CameraInfo(imageWidth: Float(currentFrame.camera.imageResolution.width),
                                       imageHeight: Float(currentFrame.camera.imageResolution.height),
                                       exposureDuration: Double(currentFrame.camera.exposureDuration))
-            
-            let image    = RawImage(currentFrame.capturedImage)
-            
-            let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
-            
+        let image        = RawImage(currentFrame.capturedImage)
+        let sniffedBlock = SniffBlock(vertices: vertices, image: image, camInfo: camInfo)
+        queue.addOperation {
             self.viewModel.write(sniffedBlock)
-        } else if framesCount == 10 {
-            for i in 0..<10 {
-                if let sniffedBlock = self.viewModel.read() {
-                    print("======== BLOCK #\(i)  =============================================================")
+        }
+    }
+    
+    func displayRecording(_ count: Int) {
+        for i in 0..<count {
+            if let sniffedBlock = self.viewModel.read() {
+                print("======== BLOCK #\(i)  ====================================================")
 
-                    print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
-                    print("\(sniffedBlock.vertices)")
+                print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
+                print("\(sniffedBlock.vertices)")
 
-                    print("\n\n IMAGE          \n\n ")
-                    print("\(sniffedBlock.image)")
+                print("\n\n IMAGE          \n\n ")
+                print("\(sniffedBlock.image)")
 
-                    print("\n\n CAM         \n\n ")
-                    print("\(sniffedBlock.camInfo)\n\n")
-                }
+                print("\n\n CAM         \n\n ")
+                print("\(sniffedBlock.camInfo)\n\n")
             }
         }
     }

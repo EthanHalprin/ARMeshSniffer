@@ -12,6 +12,7 @@ class ViewModel {
     var filename = "armesh_results.bin"
     let documentInteractionController = UIDocumentInteractionController()
     
+    
     /// Saves data as pdf in the Files app system on the device
     ///
     /// - Parameters:

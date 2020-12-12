@@ -16,6 +16,7 @@ struct SniffBlock: Codable {
 }
 
 struct RawImage: Codable {
+
     var jpegData: Data
 
     public init(_ pixelBuffer: CVPixelBuffer) {
@@ -28,8 +29,6 @@ struct RawImage: Codable {
         }
     }
 }
-//Deserialize:
-//UIImage(data: instanceOfSomeImage.photo)!
 
 struct CameraInfo: Codable {
     var imageWidth: Float
