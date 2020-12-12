@@ -39,6 +39,14 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Pause the view's session
         sceneView.session.pause()
     }
+    
+    // MARK: - @IBAction
+    @IBAction func stopTouchInside(_ sender: UIButton) {
+        sceneView.session.pause()
+        viewModel.operationQueue.waitUntilAllOperationsAreFinished()
+        viewModel.displayRecording()
+    }
+    
 
     // MARK: - ARSCNViewDelegate
     
