@@ -176,7 +176,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     func displayRecording(_ count: Int) {
         for i in 0..<count {
             if let sniffedBlock = self.viewModel.read() {
-                print("======== BLOCK #\(i)  ====================================================")
+                print("\n\n======== BLOCK #\(i)  ====================================================")
 
                 print("\n\n \(sniffedBlock.vertices.count) VERTICES          \n\n ")
                 print("\(sniffedBlock.vertices)")

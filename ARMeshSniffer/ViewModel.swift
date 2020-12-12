@@ -10,6 +10,7 @@ import UIKit
 class ViewModel {
     
     var filename = "armesh_results.bin"
+    var url: URL?
     let documentInteractionController = UIDocumentInteractionController()
     
     
@@ -31,7 +32,25 @@ class ViewModel {
         vc.present(activityController, animated: true, completion: nil)
     }
     
+    private func open() -> URL? {
+        var url: URL?
+        
+        if let dir = FileManager.default.urls(for: .documentDirectory,
+                                              in: .userDomainMask).first {
+            url = dir.appendingPathComponent(self.filename)
+        }
+        return url
+    }
+    
     func write(_ block: SniffBlock) {
+        
+        if self.url == nil {
+            self.url = open()
+        }
+        
+        guard let fileURL = self.url else {
+            return
+        }
         
         var blockData: Data?
         
@@ -41,17 +60,10 @@ class ViewModel {
             fatalError("ERROR: Cannot decode SniffBlock")
         }
         
-        if let dir = FileManager.default.urls(for: .documentDirectory,
-                                              in: .userDomainMask).first {
-            let url = dir.appendingPathComponent(self.filename)
-            if let blockData = blockData {
-                do {
-                    try blockData.write(to: url)
-                }
-                catch {
-                    print("ERROR: Could not write to binary file")
-                }
-            }
+        do {
+            try blockData?.write(to: fileURL)
+        } catch {
+            print("ERROR: Could not write to binary file")
         }
     }
     
