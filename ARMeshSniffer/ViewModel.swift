@@ -30,6 +30,56 @@ class ViewModel {
         vc.present(activityController, animated: true, completion: nil)
     }
     
+    func write(_ block: SniffBlock) {
+        
+        var blockData: Data?
+        
+        do {
+            blockData = try JSONEncoder().encode(block)
+        } catch {
+            fatalError("ERROR: Cannot decode SniffBlock")
+        }
+        
+        if let dir = FileManager.default.urls(for: .documentDirectory,
+                                              in: .userDomainMask).first {
+            let url = dir.appendingPathComponent(self.filename)
+            if let blockData = blockData {
+                do {
+                    try blockData.write(to: url)
+                }
+                catch {
+                    print("ERROR: Could not write to binary file")
+                }
+            }
+        }
+    }
+    
+    func read() -> SniffBlock? {
+    
+        var data: Data?
+        var sniffedBlock: SniffBlock?
+        
+        if let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first {
+            let fileURL = dir.appendingPathComponent(self.filename)
+            do {
+                data = try Data(contentsOf: fileURL)
+            }
+            catch {
+                print("ERROR: Could not encode SniffBlock to data")
+            }
+        }
+        
+        if let data = data {
+            do {
+                sniffedBlock = try JSONDecoder().decode(SniffBlock.self, from: data)
+            } catch {
+                print("ERROR: Could not decode SniffBlock from data")
+            }
+        }
+        
+        return sniffedBlock
+    }
+    
     func write(_ wArray: inout [Float]) {
         let wData = Data(bytes: &wArray, count: wArray.count * MemoryLayout<Float>.stride)
         
@@ -44,7 +94,7 @@ class ViewModel {
             }
         }
     }
-    func read() -> [Float]? {
+    func readBin() -> [Float]? {
     
         var rData: Data?
         
