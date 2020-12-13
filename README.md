@@ -15,14 +15,19 @@ MVVM
 * Launch an ARSession with FaceTracking Configuration
 * Draw a face mesh on tracked face
 * For each frame in renderer call, parse FaceAncor geometry to receive:
+    
     • 3D vertices (it's a SIMD3<Float> each)
+
     • CVPixelBuffer from captured image
+
     • Data on cam (size, exposure)
 
   Intercepting frame done on background (OperationQueue) and one after another, to acheive sequntially 
   order in frames recording. Thus, vertices and jpeg Data for each frame is synchronised.
 * After user stops session, all recorded data shall be displayed on output console of Xcode
-* Another sample shall be save to pdf in Device Apps data (requires approval)
+* Another sample shall be save to pdf in Device Apps data (requires approval) to 
+  prove ability, in case the meaning was to keep the data there (in that case, simply
+  the save will go there instead of .documents path)
 
 ### Pipeline of recoding
 
