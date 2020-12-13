@@ -30,6 +30,7 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         // Run the view's session
         sceneView.session.run(configuration)
         
+        // Set to a single operation at a time, for sequentially recording frames
         viewModel.operationQueue.maxConcurrentOperationCount = 1
     }
     
@@ -42,6 +43,8 @@ class ViewController: UIViewController, ARSCNViewDelegate {
     
     // MARK: - @IBAction
     @IBAction func stopTouchInside(_ sender: UIButton) {
+        
+        // Stop
         sceneView.session.pause()
         viewModel.operationQueue.waitUntilAllOperationsAreFinished()
                 
@@ -50,7 +53,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                                       preferredStyle: .alert)
         
         alert.addAction(UIAlertAction(title: "CLOSE", style: .default, handler: { _ in
+            
+            // This call will dump everything recorded to outpout (including all vertices)
             self.viewModel.displaySavedFileContent()
+            
+            // This will keep a sample DAtaon a frame sniff block to Files App as a pdf
             self.viewModel.savePDF(presenter: self)
         }))
         
@@ -81,6 +88,9 @@ class ViewController: UIViewController, ARSCNViewDelegate {
             return
         }
         
+        // Disaptch work of recording to background (OperationQueue with capacity = 1
+        // gives us SniffedBlock one after another, thus acheives synchronously vertices
+        // and image (jpeg data)
         viewModel.operationQueue.addOperation {
             print("–––––––––––––––––––––– Frame No. \(self.viewModel.framesCount) ––––––––––––––––––––––")
             self.viewModel.framesCount += 1
@@ -93,20 +103,11 @@ class ViewController: UIViewController, ARSCNViewDelegate {
                                                imageHeight: Float(currentFrame.camera.imageResolution.height),
                                                exposureDuration: Double(currentFrame.camera.exposureDuration))
             
+            // Dispatch a single block to file. We could have save in RAM, and
+            // after session stops pass to file, but that would signifcally limit
+            // session time due to mem overflow
             self.viewModel.writeToFile(sniffedBlock)
         }
-    }
-    
-    func session(_ session: ARSession, didFailWithError error: Error) {
-        // Present an error message to the user
-    }
-    
-    func sessionWasInterrupted(_ session: ARSession) {
-        // Inform the user that the session has been interrupted, for example, by presenting an overlay
-    }
-    
-    func sessionInterruptionEnded(_ session: ARSession) {
-        // Reset tracking and/or remove existing anchors if consistent tracking is required
     }
 }
 

@@ -23,29 +23,8 @@ class ViewModel {
             self.url = dir.appendingPathComponent(self.filename)
         }
     }
-
-    /// Saves data as pdf in the Files app system on the device
-    ///
-    /// - Parameters:
-    ///
-    ///   - documentData: data to persist in file
-    ///   - vc: ViewController to open modal on
-    ///
-    /// - Note:
-    ///
-    ///   You can't force it to be downloaded and show up in their Files app.
-    ///   You have to present a UIActivityViewController that shows options on
-    ///   what they can do with that document.
-    func savePDF(presenter vc: UIViewController) {
-            if let documentData = self.pdfData {
-            DispatchQueue.main.async {
-                let activityController = UIActivityViewController(activityItems: [documentData],
-                                                                  applicationActivities: nil)
-                vc.present(activityController, animated: true, completion: nil)
-            }
-        }
-    }
     
+    /// Encode a single sniffed block from a frame & save it to a binary file
     func writeToFile(_ block: SniffBlock) {
         
         guard let fileURL = self.url else {
@@ -67,6 +46,7 @@ class ViewModel {
         }
     }
     
+    /// Reads a single sniffed block from file & decode it to a SniffBlocked
     func readFromFile() -> SniffBlock? {
     
         var data: Data?
@@ -98,6 +78,7 @@ class ViewModel {
         return sniffedBlock
     }
    
+    /// Display in output what was recorded sequentially frame by frame with index
     func displaySavedFileContent() {
         
         for i in 0..<framesCount {
@@ -120,6 +101,17 @@ class ViewModel {
                     print("\n\n CAM         \n\n ")
                     print("\(String(describing: cam))\n\n")
                 }
+            }
+        }
+    }
+
+    /// Saves Data to pdf file in Files app on device
+    func savePDF(presenter vc: UIViewController) {
+            if let documentData = self.pdfData {
+            DispatchQueue.main.async {
+                let activityController = UIActivityViewController(activityItems: [documentData],
+                                                                  applicationActivities: nil)
+                vc.present(activityController, animated: true, completion: nil)
             }
         }
     }
