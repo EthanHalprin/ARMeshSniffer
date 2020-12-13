@@ -15,6 +15,7 @@ class ViewModel {
     var contentNode: SCNNode?
     var framesCount = 0
     var operationQueue = OperationQueue()
+    var pdfData: Data?
 
     
     init() {
@@ -35,10 +36,14 @@ class ViewModel {
     ///   You can't force it to be downloaded and show up in their Files app.
     ///   You have to present a UIActivityViewController that shows options on
     ///   what they can do with that document.
-    func savePDF(_ documentData: Data, presenter vc: UIViewController) {
-        let activityController = UIActivityViewController(activityItems: [documentData],
-                                                          applicationActivities: nil)
-        vc.present(activityController, animated: true, completion: nil)
+    func savePDF(presenter vc: UIViewController) {
+            if let documentData = self.pdfData {
+            DispatchQueue.main.async {
+                let activityController = UIActivityViewController(activityItems: [documentData],
+                                                                  applicationActivities: nil)
+                vc.present(activityController, animated: true, completion: nil)
+            }
+        }
     }
     
     func writeToFile(_ block: SniffBlock) {
@@ -76,6 +81,10 @@ class ViewModel {
         }
         catch {
             print("ERROR: Could not encode SniffBlock to data")
+        }
+        
+        if pdfData == nil {
+            pdfData = data
         }
         
         if let data = data {

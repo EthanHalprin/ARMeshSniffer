@@ -46,10 +46,12 @@ class ViewController: UIViewController, ARSCNViewDelegate {
         viewModel.operationQueue.waitUntilAllOperationsAreFinished()
                 
         let alert = UIAlertController(title: "Finished",
-                                      message: "Session recording has finished. To see what was recorded, press close and watch Xcode's Debug Output Console",
+                                      message: "Session recording has finished.\n\n To see what was recorded, press close and watch Xcode's Debug Output Console.\n\n After display there is done, a sample frame data will be saved in Files App as pdf as well",
                                       preferredStyle: .alert)
+        
         alert.addAction(UIAlertAction(title: "CLOSE", style: .default, handler: { _ in
             self.viewModel.displaySavedFileContent()
+            self.viewModel.savePDF(presenter: self)
         }))
         
         self.present(alert, animated: true)
